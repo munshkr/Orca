@@ -16,9 +16,9 @@ function Osc (terminal) {
     this.stack = []
   }
 
-  this.run = function () {
+  this.run = function (now) {
     for (const id in this.stack) {
-      this.play(this.stack[id])
+      this.play(this.stack[id], now)
     }
   }
 
@@ -26,7 +26,7 @@ function Osc (terminal) {
     this.stack.push({ path, msg })
   }
 
-  this.play = function ({ path, msg }) {
+  this.play = function ({ path, msg }, now) {
     const oscMsg = new osc.Message(path)
     for (var i = 0; i < msg.length; i++) {
       oscMsg.append(terminal.orca.valueOf(msg.charAt(i)))
