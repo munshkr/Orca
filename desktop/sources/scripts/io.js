@@ -22,10 +22,10 @@ function IO (terminal) {
     this.osc.clear()
   }
 
-  this.run = function () {
-    this.midi.run()
-    this.udp.run()
-    this.osc.run()
+  this.run = function (now) {
+    this.midi.run(now)
+    this.udp.run(now)
+    this.osc.run(now)
   }
 
   this.length = function () {

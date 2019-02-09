@@ -16,7 +16,7 @@ function Osc (terminal) {
     this.stack = []
   }
 
-  this.run = function () {
+  this.run = function (now) {
     for (const id in this.stack) {
       const { path, msg } = this.stack[id];
 

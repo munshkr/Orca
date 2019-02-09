@@ -44,11 +44,11 @@ function Terminal (tile = { w: 20, h: 30 }) {
     this.el.className = 'ready'
   }
 
-  this.run = function () {
+  this.run = function (now) {
     if (this.isPaused) { return }
     this.io.clear()
     this.orca.run()
-    this.io.run()
+    this.io.run(now)
     this.update()
   }
 
@@ -81,8 +81,12 @@ function Terminal (tile = { w: 20, h: 30 }) {
   this.setSpeed = function (bpm) {
     this.bpm = clamp(bpm, 60, 300)
     console.log(`Changed speed to ${this.bpm}.`)
-    clearInterval(this.timer)
-    this.timer = setInterval(() => { this.run() }, (60000 / bpm) / 4)
+    if (this.timer) this.timer.stop();
+    var that = this;
+    this.timer = new Timer((60000 / bpm) / 4, function(now) {
+      that.run(now);
+    });
+    this.timer.run()
     this.update()
   }
 
@@ -310,6 +314,39 @@ function Terminal (tile = { w: 20, h: 30 }) {
   }
 
   function clamp (v, min, max) { return v < min ? min : v > max ? max : v }
+
+  // A more precise setInterval...
+  // Source: https://gist.github.com/manast/1185904
+  function Timer(duration, fn) {
+    this.baseline = undefined
+
+    this.run = function() {
+      if (this.baseline === undefined) {
+        this.baseline = new Date().getTime()
+      }
+
+      fn(this.baseline)
+
+      var end = new Date().getTime()
+      this.baseline += duration
+
+      var nextTick = duration - (end - this.baseline)
+      if (nextTick < 0) {
+        nextTick = 0
+      }
+
+      (function(i) {
+        i.timer = setTimeout(function() {
+          i.run()
+        }, nextTick)
+      }(this))
+    }
+
+    this.stop = function() {
+      clearTimeout(this.timer)
+    }
+  }
+
 }
 
 module.exports = Terminal
