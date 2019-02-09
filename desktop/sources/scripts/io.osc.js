@@ -17,18 +17,28 @@ function Osc (terminal) {
   }
 
   this.run = function (now) {
+    // Build packets array
+    let packets = [];
     for (const id in this.stack) {
       const { path, msg } = this.stack[id];
 
-      // Build args array
+      // Build args array for packet
       let args = [];
       for (var i = 0; i < msg.length; i++) {
         const value = terminal.orca.valueOf(msg.charAt(i));
         args.push({ type: 'i', value: value });
       }
 
-      this.udpPort.send({ address: path, args: args }, this.ip, this.port);
+      packets.push({ address: path, args: args });
     }
+
+    const timeTag = { native: now };
+
+    // Send OSC bundle
+    this.udpPort.send({
+      timeTag: timeTag,
+      packets: packets
+    }, this.ip, this.port);
   }
 
   this.send = function (path, msg) {
