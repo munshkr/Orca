@@ -1,6 +1,6 @@
 'use strict'
 
-const osc = require('node-osc')
+const osc = require('osc')
 
 function Osc (terminal) {
   this.stack = []
@@ -18,22 +18,21 @@ function Osc (terminal) {
 
   this.run = function () {
     for (const id in this.stack) {
-      this.play(this.stack[id])
+      const { path, msg } = this.stack[id];
+
+      // Build args array
+      let args = [];
+      for (var i = 0; i < msg.length; i++) {
+        const value = terminal.orca.valueOf(msg.charAt(i));
+        args.push({ type: 'i', value: value });
+      }
+
+      this.udpPort.send({ address: path, args: args }, this.ip, this.port);
     }
   }
 
   this.send = function (path, msg) {
     this.stack.push({ path, msg })
-  }
-
-  this.play = function ({ path, msg }) {
-    const oscMsg = new osc.Message(path)
-    for (var i = 0; i < msg.length; i++) {
-      oscMsg.append(terminal.orca.valueOf(msg.charAt(i)))
-    }
-    this.client.send(oscMsg, (err) => {
-      if (err) { console.warn(err) }
-    })
   }
 
   this.select = function (port) {
@@ -45,8 +44,14 @@ function Osc (terminal) {
   }
 
   this.setup = function () {
-    if (this.client) { this.client.kill() }
-    this.client = new osc.Client(this.ip, this.port)
+    if (this.udpPort) this.udpPort.close();
+
+    this.udpPort = new osc.UDPPort({
+      localAddress: '0.0.0.0',
+      metadata: true
+    });
+
+    this.udpPort.open();
   }
 }
 
